@@ -3,14 +3,15 @@ from angle_detection import AngleDetector
 from evaluation import VisuRecorder
 from evaluation import DataRecorder
 from evaluation import FrameExtractor
-import time # only used for runtime measurements
+import time
 import cv2 as cv
 
 # --------------------------------------------------IMPORTANT NOTE-----------------------------------------------------
 # To ensure optimal performance, it is important to calibrate the system properly before using the following functions.
-# You can use the "get_warp_matrix.py" and/or "get_hsv_masks.py" scripts to do this. If no calibration data is
-# available, an error may occur. It is also recommended to adjust the camera-parameter file to the current illumination
-# using "uEye Cockpit".
+# To perform a complete calibration of the system, you can use the "calibration.py" script.
+# To perform individual calibration steps, use the scripts "get_warp_matrix.py", "get_hsv_masks.py" and
+# "get_reference_axis.py". If no calibration data is available, an error may occur. It is also recommended, to adjust
+# the camera-parameter file to the current illumination using "uEye Cockpit".
 # In case of functional issues, you can try using the debug scripts located in the "DebugScripts" folder.
 # ---------------------------------------------------------------------------------------------------------------------
 
@@ -19,11 +20,11 @@ camera = IDSCameraController(param_file=r"../CameraParameters/cp_AngleDetection.
 
 # Initialize AngleDetector object,
 # definition = set definition of angle (0 = second angle relative to the first, 1=second angle absolute)
-measurement = AngleDetector(camera, definition=0)
+measurement = AngleDetector(camera, definition=1)
 
 # Initialize evaluation objects
 # VisuRecorder to record video stream, rec_filename = set video filename
-visu_rec = VisuRecorder(rec_filename='Demo')
+visu_rec = VisuRecorder(rec_filename='DemoFile_2 ')
 
 # DataRecorder to record measurement data, log_filename = set log filename
 data_rec = DataRecorder(log_filename='Demo')
@@ -31,9 +32,10 @@ data_rec = DataRecorder(log_filename='Demo')
 # FrameExtractor to extract single frames from video stream,
 # frame_filename = set filename for frames, folder = set folder name,
 # rate = rate to capture frames, count =  number of frames to capture
-frame_extr = FrameExtractor(frame_filename='Demo', folder='DemoFolder', rate=10, count=10)
+frame_extr = FrameExtractor(frame_filename='Demo', folder='DemoFolder', rate=20, count=20)
 
 while True:
+    # If needed measure execution time
     start_time = time.time()
 
     # Detect angles of pendulum
@@ -48,18 +50,18 @@ while True:
 
     # Record visualization of measurement, passing parameter: AngleDetector-Object
     # Note: Use only in combination with visualize() function
-    visu_rec.record_visu(measurement)
+    #visu_rec.record_visu(measurement)
 
     # Record data of active measurement, passing parameter: AngleDetector-Object
     # Note: Use only in combination with get_angle() and if needed get_angular_vel() function
-    data_rec.write_datarow(measurement)
+    #data_rec.write_datarow(measurement)
 
     # Extract frames from visualization, passing parameter: AngleDetector-Object
     # Note: Use only in combination with visualize() function
-    frame_extr.extract_frames(measurement)
+    #frame_extr.extract_frames(measurement)
 
-    #print(time.time()-start_time)
-
+    # Print execution time per cycle if needed
+    # print(time.time() - start_time)
 
     # Possibility to quit measurement by hitting 'q'. Only usable if visualize() function is used.
     if cv.waitKey(1) & 0xFF == ord('q'):
@@ -73,8 +75,8 @@ cv.destroyAllWindows()
 camera.close_camera_connection()
 
 # Save recording of visualization
-visu_rec.stop_recording_visu()
+#visu_rec.stop_recording_visu()
 
 # Save data-files as .csv or .pkl
-data_rec.save_csv()
-data_rec.save_pickle()
+#data_rec.save_csv()
+#data_rec.save_pickle()

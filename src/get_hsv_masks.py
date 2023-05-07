@@ -1,7 +1,7 @@
 import cv2 as cv
 import numpy as np
 import colorsys
-import params
+import calibration_params as cal_params
 import os.path
 from camera_controller import IDSCameraController
 
@@ -38,23 +38,27 @@ class HSVCollector:
         value_min, value_max = np.min(hsv_values[:, 2]), np.max(hsv_values[:, 2])
 
         # Ensure that the minimum and maximum values are within the valid HSV range
-        self.hsv_min_max[0, 0] = max(0, hue_min-5)
-        self.hsv_min_max[1, 0] = min(179, hue_max+5)
-        self.hsv_min_max[0, 1] = max(0, saturation_min-10)
-        self.hsv_min_max[1, 1] = min(255, saturation_max+10)
-        self.hsv_min_max[0, 2] = max(0, value_min-10)
-        self.hsv_min_max[1, 2] = min(255, value_max+10)
+        self.hsv_min_max[0, 0] = max(0, hue_min - cal_params.hue_tolerance)
+        self.hsv_min_max[1, 0] = min(179, hue_max + cal_params.hue_tolerance)
+        self.hsv_min_max[0, 1] = max(0, saturation_min - cal_params.sat_tolerance)
+        self.hsv_min_max[1, 1] = min(255, saturation_max + cal_params.sat_tolerance)
+        self.hsv_min_max[0, 2] = max(0, value_min - cal_params.val_tolerance)
+        self.hsv_min_max[1, 2] = min(255, value_max + cal_params.val_tolerance)
 
 
 def main():
-    capture = IDSCameraController()
+    capture = IDSCameraController(param_file=r"../CameraParameters/cp_AngleDetection.ini")
     hsv_values_red = HSVCollector()
     hsv_values_green = HSVCollector()
     cancel = False
     if os.path.exists("../CalibrationData/WarpMatrix.npy"):
         warp_matrix = np.load('../CalibrationData/WarpMatrix.npy')
     else:
-        raise RuntimeError("No 'WarpMatrix.npy'-file found. Use 'get_warp_matrix.py' to compute warp matrix")
+        warp_matrix = arr = np.array([[8.58769289e-01, -1.08283228e-02, -3.82004069e+02],
+                                      [2.48709061e-03, 8.58046261e-01, -8.09075447e+01],
+                                      [-7.62754274e-06, -1.20314697e-05, 1.00000000e+00]])
+        print("WARNING: No 'WarpMatrix.npy'-file found. Use 'get_warp_matrix.py'-script to compute warp matrix. "
+              "Continue with default matrix.")
     cv.namedWindow('ColourCalibration')
 
     cv.setMouseCallback('ColourCalibration', hsv_values_red.collect_hsv_values)
@@ -62,20 +66,20 @@ def main():
     while True:
         frame = capture.capture_image()
         hsv_values_red.frame_warped = cv.warpPerspective(frame, warp_matrix,
-                                                         (params.warped_frame_side, params.warped_frame_side))
+                                                         (cal_params.warped_frame_side, cal_params.warped_frame_side))
 
-        cv.rectangle(hsv_values_red.frame_warped, (0, 0), (params.warped_frame_side, 40), (255, 255, 255), -1)
+        cv.rectangle(hsv_values_red.frame_warped, (0, 0), (cal_params.warped_frame_side, 40), (255, 255, 255), -1)
         label1 = "Move RED circle to different positions and click on it to collect colour values (max.10). " \
                 "Press 'n' to continue. Press 'q' to close window."
         label2 = "Collected Values: " + str(hsv_values_red.hsv_values_idx)
         cv.putText(hsv_values_red.frame_warped, label1, (2, 15), cv.FONT_HERSHEY_SIMPLEX, 0.4, (0, 0, 0), 1, cv.LINE_AA)
         cv.putText(hsv_values_red.frame_warped, label2, (2, 30), cv.FONT_HERSHEY_SIMPLEX, 0.4, (0, 0, 0), 1, cv.LINE_AA)
         cv.imshow('ColourCalibration', hsv_values_red.frame_warped)
-
-        if cv.waitKey(1) & 0xFF == ord('q'):
+        key = cv.waitKey(1) & 0xFF
+        if key == ord('q'):
             cancel = True
             break
-        elif (cv.waitKey(1) & 0xFF == ord('n')) or hsv_values_red.hsv_values_idx >= 10:
+        elif key == ord('n') or hsv_values_red.hsv_values_idx >= 10:
             break
 
     if hsv_values_red.hsv_values_idx > 0:
@@ -90,20 +94,21 @@ def main():
 
     while True & cancel is False:
         frame = capture.capture_image()
-        hsv_values_green.frame_warped = cv.warpPerspective(frame, warp_matrix, (params.warped_frame_side, params.warped_frame_side))
+        hsv_values_green.frame_warped = cv.warpPerspective(frame, warp_matrix,
+                                                           (cal_params.warped_frame_side, cal_params.warped_frame_side))
 
-        cv.rectangle(hsv_values_green.frame_warped, (0, 0), (params.warped_frame_side, 40), (255, 255, 255), -1)
+        cv.rectangle(hsv_values_green.frame_warped, (0, 0), (cal_params.warped_frame_side, 40), (255, 255, 255), -1)
         label1 = "Move GREEN circle to different positions and click on it to collect colour values (max.10). " \
                 "Press 'n' to continue. Press 'q' to close window."
         label2 = "Collected Values: " + str(hsv_values_green.hsv_values_idx)
         cv.putText(hsv_values_green.frame_warped, label1, (2, 15), cv.FONT_HERSHEY_SIMPLEX, 0.4, (0, 0, 0), 1, cv.LINE_AA)
         cv.putText(hsv_values_green.frame_warped, label2, (2, 30), cv.FONT_HERSHEY_SIMPLEX, 0.4, (0, 0, 0), 1, cv.LINE_AA)
         cv.imshow('ColourCalibration', hsv_values_green.frame_warped)
-
-        if cv.waitKey(1) & 0xFF == ord('q'):
+        key = cv.waitKey(1) & 0xFF
+        if key == ord('q'):
             cancel = True
             break
-        elif (cv.waitKey(1) & 0xFF == ord('n')) or hsv_values_green.hsv_values_idx >= 10:
+        elif key == ord('n') or hsv_values_green.hsv_values_idx >= 10:
             break
 
     if hsv_values_green.hsv_values_idx > 0:
@@ -116,8 +121,9 @@ def main():
 
     while True & cancel is False:
         frame = capture.capture_image()
-        frame_warped = cv.warpPerspective(frame, warp_matrix, (params.warped_frame_side, params.warped_frame_side))
-        cv.rectangle(frame_warped, (0, 0), (params.warped_frame_side, 40), (255, 255, 255), -1)
+        frame_warped = cv.warpPerspective(frame, warp_matrix,
+                                          (cal_params.warped_frame_side, cal_params.warped_frame_side))
+        cv.rectangle(frame_warped, (0, 0), (cal_params.warped_frame_side, 40), (255, 255, 255), -1)
         label1 = "Colour calibration finished. Values saved successfully. Press 'q' to close window."
         cv.putText(frame_warped, label1, (2, 15), cv.FONT_HERSHEY_SIMPLEX, 0.4, (0, 0, 0), 1, cv.LINE_AA)
         cv.imshow('ColourCalibration', frame_warped)

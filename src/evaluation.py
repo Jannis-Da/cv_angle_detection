@@ -1,11 +1,33 @@
 import os.path
 import datetime
-import params
+import detection_params
 import cv2 as cv
 import pandas as pd
 
 
 class VisuRecorder:
+    """
+    Class for recording visualizations produced by an angle detector object.
+
+    Parameters
+    ----------
+    rec_filename : str, optional
+        The filename for the recorded video. Default is "rec".
+
+    Attributes
+    ----------
+    recorder : cv2.VideoWriter
+        The video writer object used for recording the visualization.
+    rec_filename : str
+        The filename for the recorded video.
+
+    Methods
+    -------
+    record_visu(angle_detector)
+        Records the visualization produced by the angle detector object.
+    stop_recording_visu()
+        Stops the recording of the video and releases the video writer object.
+    """
     def __init__(self, rec_filename="rec"):
 
         if not os.path.exists("../VisuRecords"):
@@ -14,9 +36,10 @@ class VisuRecorder:
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         self.recorder = cv.VideoWriter(f"../VisuRecords/{timestamp}_{rec_filename}.avi",
                                        cv.VideoWriter_fourcc(*'MJPG'), 30,
-                                       (params.warped_frame_side, params.warped_frame_side))
+                                       (detection_params.warped_frame_side, detection_params.warped_frame_side))
 
     def record_visu(self, angle_detector):
+
         if angle_detector.visu is not None and angle_detector.visu_used is True:
             self.recorder.write(angle_detector.visu)
         elif angle_detector.visu_used is False:
@@ -31,6 +54,32 @@ class VisuRecorder:
 
 
 class DataRecorder:
+    """
+    Class for saving data produced by an angle detector object.
+
+    Parameters
+    ----------
+    log_filename : str, optional
+        The name of the log file (default: "log").
+
+    Attributes
+    ----------
+    timestamp : str
+        The timestamp of when the DataRecorder object was created.
+    filename : str
+        The name of the log file.
+    df : pandas.DataFrame
+        A DataFrame containing the recorded data.
+
+    Methods
+    -------
+    write_datarow(angle_detector)
+        Writes a row of data to the DataFrame.
+    save_pickle()
+        Saves the DataFrame to a pickle file.
+    save_csv()
+        Saves the DataFrame to a CSV file.
+    """
     def __init__(self, log_filename="log"):
         self.timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
@@ -62,7 +111,44 @@ class DataRecorder:
         else:
             print("WARNING: No values found to save to .csv-file. Use 'write_datarow'-function to collect data.")
 
+
 class FrameExtractor:
+    """
+    A class for extracting frames from an angle detector's visualization.
+
+    Parameters
+    ----------
+    frame_filename : str, optional
+        The prefix of the extracted frame file names (default: "frame").
+    folder : str, optional
+        The name of the folder where the extracted frames will be saved (default: "folder").
+    rate : int, optional
+        The frame extraction rate in frames per second (default: 10).
+    count : int, optional
+        The maximum number of frames to extract (default: 10).
+
+    Attributes
+    ----------
+    filename : str
+        The prefix of the extracted frame file names.
+    folder : str
+        The name of the folder where the extracted frames will be saved.
+    rate : int
+        The frame extraction rate in frames per second.
+    frames : int
+        The maximum number of frames to extract.
+    rate_count : int
+        A counter for the frame extraction rate.
+    frame_count : int
+        A counter for the number of frames extracted.
+    timestamp : str
+        The timestamp of when the FrameExtractor object was created.
+
+    Methods
+    -------
+    extract_frames(angle_detector)
+        Extracts frames from the angle detector's visualization.
+    """
     def __init__(self, frame_filename='frame', folder="folder", rate=10, count=10):
         self.filename = frame_filename
         self.folder = folder
@@ -71,7 +157,7 @@ class FrameExtractor:
         self.rate_count = 0
         self.frame_count = 1
 
-        self.timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%warp_matrix-%S")
+        self.timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
         if not os.path.exists(f"../ExtractedFrames/{self.timestamp}_{self.folder}"):
             os.makedirs(f"../ExtractedFrames/{self.timestamp}_{self.folder}")
@@ -80,7 +166,7 @@ class FrameExtractor:
         if angle_detector.visu is not None:
             self.rate_count += 1
             if (self.rate_count >= self.rate) & (self.frame_count <= self.frames):
-                cv.imwrite(f"../ExtractedFrames/{self.timestamp}_{self.folder}/{self.filename}_{self.frame_count}.jpg", angle_detector.visu)
+                cv.imwrite(f"../ExtractedFrames/{self.timestamp}_{self.folder}/{self.filename}_{angle_detector.timestamp}.jpg", angle_detector.visu)
                 self.frame_count += 1
                 self.rate_count = 0
         elif angle_detector.visu_used is False:

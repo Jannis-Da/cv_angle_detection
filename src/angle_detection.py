@@ -1,9 +1,8 @@
 import cv2 as cv
 import numpy as np
 import math
-import params
+import detection_params
 import time
-import os
 
 
 def norm_vector(vector):
@@ -43,7 +42,7 @@ def calc_angle(v1, v2):
     v1_u = norm_vector(v1)
     v2_u = norm_vector(v2)
 
-    # Dot-product of normalized vectors, limited to values between -1 and 1, calculate angle with arccos
+    # Dot-product of normalized vectors, limited to values between -1 and 1, calculate angle with arc-cos
     return np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0))
 
 
@@ -106,7 +105,7 @@ def get_axis_visu(axis):
     numpy.ndarray
         A vector representing the visual representation of the input axis, with selected length and integer coordinates.
     """
-    axis = norm_vector(axis) * params.visu_axis_length
+    axis = norm_vector(axis) * detection_params.visu_axis_length
     return axis.astype(int)
 
 
@@ -128,24 +127,26 @@ def get_center_position(contours):
     """
     contours_cnt = 0
     position = np.zeros(2)
+    contour_id = -1
     for i, c in enumerate(contours):
-        # Filter contours by size of the area they are covering to make sure only coloured circles are detected
+        # Filter contours by size of the area they are covering to make sure only the coloured circles are detected
         area = cv.contourArea(c)
-        if area < params.area_min or params.area_max < area:
-            continue
 
+        if area < detection_params.area_min or detection_params.area_max < area:
+            continue
         # safe center of contour
         position = get_center(c)
+        contour_id = i
         contours_cnt += 1
 
     # Make sure that only one closed contour is found by checking counter
     if contours_cnt != 1:
         position = np.full(2, np.nan)
+        contour_id = -1
         found = False
     else:
         found = True
-    return position, found
-
+    return position, found, contour_id
 
 class AngleDetector:
     """
@@ -161,8 +162,24 @@ class AngleDetector:
 
     Attributes
     ----------
-    warp_matrix : numpy.ndarray
-        The warp matrix used for warping the captured frames.
+    camera: Camera
+        The camera object used for capturing the video stream.
+    definition : int
+        An integer value that determines the reference vector for the second pendulum arm.
+    contours_red : numpy.ndarray
+        The contours of the red objects in the most recent frame.
+    contours_green : numpy.ndarray
+        The contours of the green objects in the most recent frame.
+    pos_A : numpy.ndarray
+        The position of the fixed pivot point of the double pendulum.
+    pos_B : numpy.ndarray
+        The position of the second pivot point.
+    pos_C : numpy.ndarray
+        The position of the end of the second pendulum arm.
+    vec_ref_1 : numpy.ndarray
+        The reference vector used for the first pendulum arm.
+    vec_ref_2 : numpy.ndarray
+        The reference vector used for the second pendulum arm.
     angle1 : float
         The angle of the first pendulum arm. [rad]
     angle2 : float
@@ -179,26 +196,10 @@ class AngleDetector:
         The timestamp of when the AngleDetector object was created.
     timestamp : float
         The timestamp of the most recent angle calculation.
-    definition : int
-        An integer value that determines the reference vector for the second pendulum arm.
     visu : numpy.ndarray
         The most recent warped frame.
     visu_used : Bool
         A boolean indicator to show if visu function is used.
-    pos_A : numpy.ndarray
-        The position of the fixed pivot point of the double pendulum.
-    pos_B : numpy.ndarray
-        The position of the second pivot point.
-    pos_C : numpy.ndarray
-        The position of the end of the second pendulum arm.
-    contours_red : numpy.ndarray
-        The contours of the red objects in the most recent frame.
-    contours_green : numpy.ndarray
-        The contours of the green objects in the most recent frame.
-    vec_ref_1 : numpy.ndarray
-        The reference vector used for the first pendulum arm.
-    vec_ref_2 : numpy.ndarray
-        The reference vector used for the second pendulum arm.
 
     Methods
     -------
@@ -214,16 +215,14 @@ class AngleDetector:
     def __init__(self, camera, definition=0):
         self.camera = camera
         self.definition = definition
-        if os.path.exists("../CalibrationData/WarpMatrix.npy"):
-            self.warp_matrix = np.load('../CalibrationData/WarpMatrix.npy')
-        else:
-            raise RuntimeError("No 'WarpMatrix.npy'-file found. Use 'get_warp_matrix.py' to compute warp matrix.")
         self.contours_red = None
         self.contours_green = None
-        self.pos_A = params.pos_A
+        self.contour_red_id = None
+        self.contour_green_id = None
+        self.pos_A = detection_params.pos_A
         self.pos_B = np.full(2, np.nan)
         self.pos_C = np.full(2, np.nan)
-        self.vec_ref_1 = np.array([0, params.warped_frame_side / 2], dtype=int)
+        self.vec_ref_1 = detection_params.vec_ref_1
         self.vec_ref_2 = np.zeros(2, dtype=int)
         self.angle1 = float("NaN")
         self.angle2 = float("NaN")
@@ -250,15 +249,16 @@ class AngleDetector:
         frame = self.camera.capture_image()
 
         # Warp frame with warp matrix to frame with defined side length
-        frame_warped = cv.warpPerspective(frame, self.warp_matrix, (params.warped_frame_side, params.warped_frame_side))
+        frame_warped = cv.warpPerspective(frame, detection_params.warp_matrix,
+                                          (detection_params.warped_frame_side, detection_params.warped_frame_side))
         self.visu = frame_warped
 
         # Convert frame to hsv-colour-space for colour filtering
         frame_hsv = cv.cvtColor(frame_warped, cv.COLOR_BGR2HSV)
 
         # Preparing mask to overlay
-        mask_red = cv.inRange(frame_hsv, params.red_min, params.red_max)
-        mask_green = cv.inRange(frame_hsv, params.green_min, params.green_max)
+        mask_red = cv.inRange(frame_hsv, detection_params.red_min, detection_params.red_max)
+        mask_green = cv.inRange(frame_hsv, detection_params.green_min, detection_params.green_max)
 
         # Find contours for red and green shapes in frame
         contours_red, _ = cv.findContours(mask_red, cv.RETR_LIST, cv.CHAIN_APPROX_NONE)
@@ -277,8 +277,8 @@ class AngleDetector:
         """
         # Try to detect red and green circle in frame and calculate center
         self.contours_red, self.contours_green = self.get_contours()
-        self.pos_B, found_B = get_center_position(self.contours_red)
-        self.pos_C, found_C = get_center_position(self.contours_green)
+        self.pos_B, found_B, self.contour_red_id = get_center_position(self.contours_red)
+        self.pos_C, found_C, self.contour_green_id = get_center_position(self.contours_green)
 
         # Calculate angle of first arm
         if found_B:
@@ -297,14 +297,14 @@ class AngleDetector:
             vec_bc = self.pos_C - self.pos_B
             # Check for chosen angle definition
             if self.definition == 0:
-                self.vec_ref_2 = self.pos_B-self.pos_A
+                self.vec_ref_2 = vec_ab
                 # Check in which rotational direction angle should be measured
                 if check_side(self.pos_B, self.pos_B + self.vec_ref_2, self.pos_C) == (-1 | 0):
                     self.angle2 = calc_angle(self.vec_ref_2, vec_bc)
                 else:
                     self.angle2 = -calc_angle(self.vec_ref_2, vec_bc)
             elif self.definition == 1:
-                self.vec_ref_2 = np.array([0, 150], dtype=int)
+                self.vec_ref_2 = detection_params.vec_ref_1
                 # Check in which rotational direction angle should be measured
                 if check_side(self.pos_B, self.pos_B + self.vec_ref_2, self.pos_C) == (-1 | 0):
                     self.angle2 = calc_angle(self.vec_ref_2, vec_bc)
@@ -315,7 +315,7 @@ class AngleDetector:
             # impossible without position of point B
             self.angle2 = float('NaN')
 
-        # Fill angle buffer for calculation of angular velocitys
+        # Fill angle buffer for calculation of angular velocities
         self.timestamp = time.time()-self.start_time
         self.angle_buffer_1.shift_buffer(self.angle1, self.timestamp)
         self.angle_buffer_2.shift_buffer(self.angle2, self.timestamp)
@@ -332,6 +332,7 @@ class AngleDetector:
             A list of two float elements representing the angular velocity of the
             first and second pendulum arm respectively.
         """
+        # Calculate velocities, make sure that angle-values are available
         if not np.all(self.angle_buffer_1.timestamps == 0):
             self.angular_vel1 = self.angle_buffer_1.calc_velocity()
             self.angular_vel2 = self.angle_buffer_2.calc_velocity()
@@ -353,69 +354,103 @@ class AngleDetector:
         vis_vectors : bool
             Boolean value to decide if vectors should be visualized.
         """
+        # Ensure that frame for visualization are available
         if self.visu is not None:
+            # set marker for other error-handling functionalities
             self.visu_used = True
+            # visualization of the contours used for angle computation
             if vis_contours:
-                for i, c in enumerate(self.contours_red):
-                    area = cv.contourArea(c)
-                    if area < params.area_min or params.area_max < area:
-                        continue
-                    cv.drawContours(self.visu, self.contours_red, i, (0, 0, 255), 2)
-                for i, c in enumerate(self.contours_green):
-                    area = cv.contourArea(c)
-                    if area < params.area_min or params.area_max < area:
-                        continue
-                    cv.drawContours(self.visu, self.contours_green, i, (0, 0, 255), 2)
+                # draw contours only when function get_center_position returned a valid value
+                if self.contour_red_id != -1:
+                    cv.drawContours(self.visu, self.contours_red, self.contour_red_id, (0, 0, 255), 1)
+                if self.contour_green_id != -1:
+                    cv.drawContours(self.visu, self.contours_green, self.contour_green_id, (0, 0, 255), 1)
 
+            # if angle1 could be detected set text labels and draw vectors for angle visualization
             if not math.isnan(self.angle1):
-                label11 = " angle1  = " + str(int(np.rad2deg(self.angle1))) + " deg"
+                label11 = str(round((np.rad2deg(self.angle1)), 1)) + " deg "
+                # exclude that angle was detected but angular velocity could not be calculated due to missing values
                 if not math.isnan(self.angular_vel1):
-                    label12 = " velocity1 = " + str(int(np.rad2deg(self.angular_vel1))) + " deg/s"
+                    label12 = str(round(np.rad2deg(self.angular_vel1), 1)) + " deg/s"
                 else:
-                    label12 = " velocity1 = NaN"
+                    label12 = "NaN"
                 if vis_vectors:
-                    # print vector between joint A and joint B
+                    # draw vector between joints
                     cv.line(self.visu, self.pos_A, self.pos_B, (255, 0, 0), thickness=1)
-                    # print angle visu at joint A
+                    # draw reference axis
                     cv.line(self.visu, self.pos_A, self.pos_A + get_axis_visu(self.vec_ref_1), (0, 255, 0),
-                            lineType=cv.LINE_8, thickness=1)  # reference axis
-                    cv.ellipse(self.visu, self.pos_A, (45, 45), 0, 90, 90 - np.rad2deg(self.angle1),
+                            lineType=cv.LINE_8, thickness=1)
+                    # draw angle visu
+                    if check_side(self.pos_A, self.pos_A + (0, 100), self.pos_A + self.vec_ref_1) == (-1 | 0):
+                        angular_offset = np.rad2deg(calc_angle((0, 1), detection_params.vec_ref_1))
+                    else:
+                        angular_offset = -np.rad2deg(calc_angle((0, 1), detection_params.vec_ref_1))
+                    start_angle = 90 - angular_offset
+                    cv.ellipse(self.visu, self.pos_A, (45, 45), 0, start_angle, start_angle - np.rad2deg(self.angle1),
                                (0, 255, 0))  # angle ellipse
             else:
-                label11 = " angle1 = NaN"
-                label12 = " velocity1 = NaN"
+                label11 = "NaN"
+                label12 = "NaN"
+
+            # if angle2 could be detected set text labels and draw vectors for angle visualization
             if not math.isnan(self.angle2):
-                label21 = " angle2 = " + str(int(np.rad2deg(self.angle2))) + " deg"
+                label21 = str(round(np.rad2deg(self.angle2), 1)) + " deg "
+                # exclude that angle was detected but angular velocity could not be calculated due to missing values
                 if not math.isnan(self.angular_vel2):
-                    label22 = " velocity2 = " + str(int(np.rad2deg(self.angular_vel2))) + " deg/s"
+                    label22 = str(round(np.rad2deg(self.angular_vel2), 1)) + " deg/s"
                 else:
-                    label22 = " velocity2 = NaN"
+                    label22 = "NaN"
                 if vis_vectors:
-                    # print  vectors between joint B and tip
+                    # draw vector between joints
                     cv.line(self.visu, self.pos_B, self.pos_C, (255, 0, 0), thickness=1)
-                    # print angle visu at joint B
-                    if self.definition == 0:  # differ between absolute and relative angles
+                    # distinguish by chosen definition
+                    if self.definition == 0:  # relative definition
+                        # draw reference axis
                         cv.line(self.visu, self.pos_B, self.pos_B + get_axis_visu(self.vec_ref_2), (0, 255, 0),
-                                lineType=cv.LINE_8, thickness=1)  # reference axis
+                                lineType=cv.LINE_8, thickness=1)
+                        # draw angle visu
                         cv.ellipse(self.visu, self.pos_B, (45, 45), 0, 90 - np.rad2deg(self.angle1),
-                                   90 - np.rad2deg(self.angle1) - np.rad2deg(self.angle2), (0, 255, 0))  # angle ellipse
-                    elif self.definition == 1:
+                                   90 - np.rad2deg(self.angle1) - np.rad2deg(self.angle2), (0, 255, 0))
+                    elif self.definition == 1:  # absolute definition
+                        # draw reference axis
                         cv.line(self.visu, self.pos_B, self.pos_B + get_axis_visu(self.vec_ref_2),
                                 (0, 255, 0), lineType=cv.LINE_8,
-                                thickness=1)  # reference axis
-                        cv.ellipse(self.visu, self.pos_B, (45, 45), 0, 90, 90 - np.rad2deg(self.angle2),
-                                   (0, 255, 0))  # angle ellipse
+                                thickness=1)
+                        # draw angle visu
+                        if check_side(self.pos_B, self.pos_B + (0, 100), self.pos_B + self.vec_ref_2) == (-1 | 0):
+                            angular_offset = np.rad2deg(calc_angle((0, 1), self.vec_ref_2))
+                        else:
+                            angular_offset = -np.rad2deg(calc_angle((0, 1), self.vec_ref_2))
+                        start_angle = 90 - angular_offset
+                        cv.ellipse(self.visu, self.pos_B, (45, 45), 0, start_angle,
+                                   start_angle - np.rad2deg(self.angle2), (0, 255, 0))
             else:
-                label21 = " angle2 = NaN"
-                label22 = " velocity2 = NaN"
+                label21 = "NaN"
+                label22 = "NaN"
 
+            # print measured values in openCV window using defined labels
             if vis_text:
+                # white background
                 cv.rectangle(self.visu, (0, 0), (230, 80), (255, 255, 255), -1)
-                cv.putText(self.visu, label11, (0, 15), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv.LINE_AA)
-                cv.putText(self.visu, label12, (0, 35), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv.LINE_AA)
-                cv.putText(self.visu, label21, (0, 55), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv.LINE_AA)
-                cv.putText(self.visu, label22, (0, 75), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv.LINE_AA)
 
+                # splitting in multiple function calls to achieve fixed positions (tabular)
+                cv.putText(self.visu, "angle1", (2, 15), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv.LINE_AA)
+                cv.putText(self.visu, "=", (77, 15), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv.LINE_AA)
+                cv.putText(self.visu, label11, (100, 15), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv.LINE_AA)
+
+                cv.putText(self.visu, "velocity1", (2, 35), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv.LINE_AA)
+                cv.putText(self.visu, "=", (77, 35), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv.LINE_AA)
+                cv.putText(self.visu, label12, (100, 35), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv.LINE_AA)
+
+                cv.putText(self.visu, "angle2", (2, 55), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv.LINE_AA)
+                cv.putText(self.visu, "=", (77, 55), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv.LINE_AA)
+                cv.putText(self.visu, label21, (100, 55), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv.LINE_AA)
+
+                cv.putText(self.visu, "velocity2", (2, 75), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv.LINE_AA)
+                cv.putText(self.visu, "=", (77, 75), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv.LINE_AA)
+                cv.putText(self.visu, label22, (100, 75), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv.LINE_AA)
+
+            # draw found center position of contours
             if vis_vectors:
                 cv.circle(self.visu, self.pos_A, 2, (255, 0, 0), thickness=3)
                 if not math.isnan(self.pos_B[0]):
@@ -432,9 +467,28 @@ class AngleDetector:
 
 
 class AngleBuffer:
+    """
+        Class for collecting angles with corresponding timestamps to calculate angular velocities of a
+        double pendulum system.
+
+        Attributes
+        ----------
+        timestamps: numpy.ndarray
+            The timestamps used to calculate the angular velocity.
+        angles: numpy.ndarray
+            The angles used to calculate the angular velocity.
+        current_vel: float
+            The current angular velocity calculated with the buffer class.
+
+        Methods
+        -------
+        get_contours()
+            Filters the captured frame for red and green colour and extracts the contours separately.
+        """
     def __init__(self):
         self.timestamps = np.zeros(2)
         self.angles = np.zeros(2)
+        self.current_vel = 0
 
     def shift_buffer(self, angle, timestamp):
         """
@@ -462,4 +516,12 @@ class AngleBuffer:
         float
             The calculated velocity as a float value in radians per seconds.
         """
-        return (self.angles[1] - self.angles[0])/(self.timestamps[1] - self.timestamps[0])
+        passed_ot_from_right = self.angles[0] > 0 > self.angles[1] and self.current_vel > 0
+        passed_ot_from_left = self.angles[0] < 0 < self.angles[1] and self.current_vel < 0
+
+        if passed_ot_from_right or passed_ot_from_left:
+            self.current_vel = (self.angles[1] - self.angles[0] + 2 * math.pi) / (self.timestamps[1] - self.timestamps[0])
+            return self.current_vel
+
+        self.current_vel = (self.angles[1] - self.angles[0]) / (self.timestamps[1] - self.timestamps[0])
+        return self.current_vel

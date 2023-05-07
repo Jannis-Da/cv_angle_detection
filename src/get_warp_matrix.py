@@ -1,7 +1,7 @@
 import cv2 as cv
 import os.path
 import numpy as np
-import params
+import calibration_params as cal_params
 from camera_controller import IDSCameraController
 
 
@@ -13,14 +13,15 @@ class WarpMatrixCalculator:
 
     def get_matrix(self):
         print("Calculate warp matrix...")
-        ids = np.empty((0, 0), int)
         frame_count = 0
         # search for aruco markers in frames until all 4 markers are found or max values for frames is reached
-        while not contains_zero_to_three(ids):
+        while True:
             frame_count += 1
             frame = self.camera.capture_image()
-            corners, ids, _ = cv.aruco.detectMarkers(frame, params.aruco_dict, parameters=params.aruco_params)
-            if frame_count >= 1000:
+            corners, ids, _ = cv.aruco.detectMarkers(frame, cal_params.aruco_dict, parameters=cal_params.aruco_params)
+            if contains_zero_to_three(ids):
+                break
+            elif frame_count >= 1000:
                 if ids is None:
                     ids_count = 0
                 else:
@@ -53,8 +54,8 @@ def calc_matrix(corners, ids):
 
     # Define source and destination points for perspective transform
     src_pts = np.float32([up_left, up_right, down_right, down_left])
-    dst_pts = np.float32([[0, 0], [params.warped_frame_side, 0], [params.warped_frame_side, params.warped_frame_side],
-                          [0, params.warped_frame_side]])
+    dst_pts = np.float32([[0, 0], [cal_params.warped_frame_side, 0], [cal_params.warped_frame_side, cal_params.warped_frame_side],
+                          [0, cal_params.warped_frame_side]])
 
     # Compute perspective transform matrix
     warp_matrix = cv.getPerspectiveTransform(src_pts, dst_pts)
@@ -64,6 +65,7 @@ def calc_matrix(corners, ids):
 def main():
     matrix_calc = WarpMatrixCalculator()
     matrix_calc.get_matrix()
+
 
 if __name__ == '__main__':
     main()
