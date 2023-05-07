@@ -54,5 +54,6 @@ def main():
     # End camera connection
     camera.close_camera_connection()
 
+
 if __name__ == '__main__':
     main()

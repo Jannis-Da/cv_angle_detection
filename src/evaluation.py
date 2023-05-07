@@ -166,7 +166,8 @@ class FrameExtractor:
         if angle_detector.visu is not None:
             self.rate_count += 1
             if (self.rate_count >= self.rate) & (self.frame_count <= self.frames):
-                cv.imwrite(f"../ExtractedFrames/{self.timestamp}_{self.folder}/{self.filename}_{angle_detector.timestamp}.jpg", angle_detector.visu)
+                cv.imwrite(f"../ExtractedFrames/{self.timestamp}_"
+                           f"{self.folder}/{self.filename}_{angle_detector.timestamp}.jpg", angle_detector.visu)
                 self.frame_count += 1
                 self.rate_count = 0
         elif angle_detector.visu_used is False:

@@ -50,7 +50,7 @@ while True:
 
     # Record visualization of measurement, passing parameter: AngleDetector-Object
     # Note: Use only in combination with visualize() function
-    #visu_rec.record_visu(measurement)
+    # visu_rec.record_visu(measurement)
 
     # Record data of active measurement, passing parameter: AngleDetector-Object
     # Note: Use only in combination with get_angle() and if needed get_angular_vel() function

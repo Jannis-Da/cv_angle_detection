@@ -18,8 +18,8 @@ if os.path.exists("../CalibrationData/WarpMatrix.npy"):
     warp_matrix = np.load('../CalibrationData/WarpMatrix.npy')
 else:
     warp_matrix = np.array([[8.58769289e-01, -1.08283228e-02, -3.82004069e+02],
-                                  [2.48709061e-03, 8.58046261e-01, -8.09075447e+01],
-                                  [-7.62754274e-06, -1.20314697e-05, 1.00000000e+00]])
+                            [2.48709061e-03, 8.58046261e-01, -8.09075447e+01],
+                            [-7.62754274e-06, -1.20314697e-05, 1.00000000e+00]])
     print("WARNING: No 'WarpMatrix.npy'-file found. Use 'get_warp_matrix.py'-script to compute warp matrix. "
           "Continue with default matrix.")
 

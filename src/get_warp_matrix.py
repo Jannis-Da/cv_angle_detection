@@ -54,7 +54,8 @@ def calc_matrix(corners, ids):
 
     # Define source and destination points for perspective transform
     src_pts = np.float32([up_left, up_right, down_right, down_left])
-    dst_pts = np.float32([[0, 0], [cal_params.warped_frame_side, 0], [cal_params.warped_frame_side, cal_params.warped_frame_side],
+    dst_pts = np.float32([[0, 0], [cal_params.warped_frame_side, 0],
+                          [cal_params.warped_frame_side, cal_params.warped_frame_side],
                           [0, cal_params.warped_frame_side]])
 
     # Compute perspective transform matrix

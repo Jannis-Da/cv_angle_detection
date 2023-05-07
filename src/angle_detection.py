@@ -148,6 +148,7 @@ def get_center_position(contours):
         found = True
     return position, found, contour_id
 
+
 class AngleDetector:
     """
     Class for detecting the angles and angular velocities of a double pendulum system.
@@ -382,9 +383,9 @@ class AngleDetector:
                             lineType=cv.LINE_8, thickness=1)
                     # draw angle visu
                     if check_side(self.pos_A, self.pos_A + (0, 100), self.pos_A + self.vec_ref_1) == (-1 | 0):
-                        angular_offset = np.rad2deg(calc_angle((0, 1), detection_params.vec_ref_1))
+                        angular_offset = np.rad2deg(calc_angle(np.array((0, 1)), detection_params.vec_ref_1))
                     else:
-                        angular_offset = -np.rad2deg(calc_angle((0, 1), detection_params.vec_ref_1))
+                        angular_offset = -np.rad2deg(calc_angle(np.array((0, 1)), detection_params.vec_ref_1))
                     start_angle = 90 - angular_offset
                     cv.ellipse(self.visu, self.pos_A, (45, 45), 0, start_angle, start_angle - np.rad2deg(self.angle1),
                                (0, 255, 0))  # angle ellipse
@@ -418,9 +419,9 @@ class AngleDetector:
                                 thickness=1)
                         # draw angle visu
                         if check_side(self.pos_B, self.pos_B + (0, 100), self.pos_B + self.vec_ref_2) == (-1 | 0):
-                            angular_offset = np.rad2deg(calc_angle((0, 1), self.vec_ref_2))
+                            angular_offset = np.rad2deg(calc_angle(np.array((0, 1)), self.vec_ref_2))
                         else:
-                            angular_offset = -np.rad2deg(calc_angle((0, 1), self.vec_ref_2))
+                            angular_offset = -np.rad2deg(calc_angle(np.array((0, 1)), self.vec_ref_2))
                         start_angle = 90 - angular_offset
                         cv.ellipse(self.visu, self.pos_B, (45, 45), 0, start_angle,
                                    start_angle - np.rad2deg(self.angle2), (0, 255, 0))
@@ -520,7 +521,8 @@ class AngleBuffer:
         passed_ot_from_left = self.angles[0] < 0 < self.angles[1] and self.current_vel < 0
 
         if passed_ot_from_right or passed_ot_from_left:
-            self.current_vel = (self.angles[1] - self.angles[0] + 2 * math.pi) / (self.timestamps[1] - self.timestamps[0])
+            self.current_vel = (self.angles[1] - self.angles[0] + 2 * math.pi) / \
+                               (self.timestamps[1] - self.timestamps[0])
             return self.current_vel
 
         self.current_vel = (self.angles[1] - self.angles[0]) / (self.timestamps[1] - self.timestamps[0])

@@ -15,7 +15,7 @@ class HSVCollector:
         if not os.path.exists(r"../CalibrationData"):
             os.makedirs(r"../CalibrationData")
 
-    def collect_hsv_values(self, event, x, y, flags, param):
+    def collect_hsv_values(self, event, x, y):
         if event == cv.EVENT_LBUTTONDOWN:  # checks mouse left button down condition
             if self.hsv_values_idx < 10:
                 rgb = np.zeros(3, dtype=int)
@@ -54,9 +54,9 @@ def main():
     if os.path.exists("../CalibrationData/WarpMatrix.npy"):
         warp_matrix = np.load('../CalibrationData/WarpMatrix.npy')
     else:
-        warp_matrix = arr = np.array([[8.58769289e-01, -1.08283228e-02, -3.82004069e+02],
-                                      [2.48709061e-03, 8.58046261e-01, -8.09075447e+01],
-                                      [-7.62754274e-06, -1.20314697e-05, 1.00000000e+00]])
+        warp_matrix = np.array([[8.58769289e-01, -1.08283228e-02, -3.82004069e+02],
+                                [2.48709061e-03, 8.58046261e-01, -8.09075447e+01],
+                                [-7.62754274e-06, -1.20314697e-05, 1.00000000e+00]])
         print("WARNING: No 'WarpMatrix.npy'-file found. Use 'get_warp_matrix.py'-script to compute warp matrix. "
               "Continue with default matrix.")
     cv.namedWindow('ColourCalibration')
@@ -70,7 +70,7 @@ def main():
 
         cv.rectangle(hsv_values_red.frame_warped, (0, 0), (cal_params.warped_frame_side, 40), (255, 255, 255), -1)
         label1 = "Move RED circle to different positions and click on it to collect colour values (max.10). " \
-                "Press 'n' to continue. Press 'q' to close window."
+                 "Press 'n' to continue. Press 'q' to close window."
         label2 = "Collected Values: " + str(hsv_values_red.hsv_values_idx)
         cv.putText(hsv_values_red.frame_warped, label1, (2, 15), cv.FONT_HERSHEY_SIMPLEX, 0.4, (0, 0, 0), 1, cv.LINE_AA)
         cv.putText(hsv_values_red.frame_warped, label2, (2, 30), cv.FONT_HERSHEY_SIMPLEX, 0.4, (0, 0, 0), 1, cv.LINE_AA)
@@ -99,10 +99,12 @@ def main():
 
         cv.rectangle(hsv_values_green.frame_warped, (0, 0), (cal_params.warped_frame_side, 40), (255, 255, 255), -1)
         label1 = "Move GREEN circle to different positions and click on it to collect colour values (max.10). " \
-                "Press 'n' to continue. Press 'q' to close window."
+                 "Press 'n' to continue. Press 'q' to close window."
         label2 = "Collected Values: " + str(hsv_values_green.hsv_values_idx)
-        cv.putText(hsv_values_green.frame_warped, label1, (2, 15), cv.FONT_HERSHEY_SIMPLEX, 0.4, (0, 0, 0), 1, cv.LINE_AA)
-        cv.putText(hsv_values_green.frame_warped, label2, (2, 30), cv.FONT_HERSHEY_SIMPLEX, 0.4, (0, 0, 0), 1, cv.LINE_AA)
+        cv.putText(hsv_values_green.frame_warped, label1, (2, 15), cv.FONT_HERSHEY_SIMPLEX,
+                   0.4, (0, 0, 0), 1, cv.LINE_AA)
+        cv.putText(hsv_values_green.frame_warped, label2, (2, 30), cv.FONT_HERSHEY_SIMPLEX,
+                   0.4, (0, 0, 0), 1, cv.LINE_AA)
         cv.imshow('ColourCalibration', hsv_values_green.frame_warped)
         key = cv.waitKey(1) & 0xFF
         if key == ord('q'):

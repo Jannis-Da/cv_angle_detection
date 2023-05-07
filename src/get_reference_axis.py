@@ -8,6 +8,7 @@ def main():
     camera = IDSCameraController(param_file=r"../CameraParameters/cp_AngleDetection.ini")
     detection = AngleDetector(camera, definition=0)
     frame_count = 0
+    reference_values = np.zeros(2, dtype=int)
     print("Checking for references. Do not move the pendulum.")
     while np.isnan(detection.pos_B).all() or np.isnan(detection.pos_C).all():
         frame_count += 1
