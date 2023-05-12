@@ -29,17 +29,21 @@ class VisuRecorder:
         Stops the recording of the video and releases the video writer object.
     """
     def __init__(self, rec_filename="rec"):
-
+        # create path for saving records
         if not os.path.exists("../VisuRecords"):
             os.makedirs("../VisuRecords")
 
+        # create timestamp for file name
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+
+        # initialize recorder
         self.recorder = cv.VideoWriter(f"../VisuRecords/{timestamp}_{rec_filename}.avi",
-                                       cv.VideoWriter_fourcc(*'MJPG'), 30,
+                                       cv.VideoWriter_fourcc(*'MJPG'), detection_params.recorder_frame_rate,
                                        (detection_params.warped_frame_side, detection_params.warped_frame_side))
 
     def record_visu(self, angle_detector):
-
+        # write frame to file with recorder method
+        # make sure that visualization is created
         if angle_detector.visu is not None and angle_detector.visu_used is True:
             self.recorder.write(angle_detector.visu)
         elif angle_detector.visu_used is False:
@@ -50,6 +54,7 @@ class VisuRecorder:
                                "Use 'record_visu()'-function only in combination with 'get_angle()'-function")
 
     def stop_recording_visu(self):
+        # release resources
         self.recorder.release()
 
 
@@ -81,19 +86,25 @@ class DataRecorder:
         Saves the DataFrame to a CSV file.
     """
     def __init__(self, log_filename="log"):
+        # create timestamp for file names
         self.timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
+        # create path for saving files
         if not os.path.exists("../DataRecords"):
             os.makedirs("../DataRecords")
 
+        # load filename from parameter
         self.filename = log_filename
+
+        # create dataframe
         self.df = pd.DataFrame({"Time": [], "Angle1": [], "Angle2": [], "AngularVel1": [], "AngularVel2": []})
 
     def write_datarow(self, angle_detector):
+        # make sure that angle detection is active by checking visu attribute
         if angle_detector.visu is not None:
             new_row = pd.Series(
-                {"Time": angle_detector.timestamp, "Angle1": angle_detector.angle1, "Angle2": angle_detector.angle2,
-                 "AngularVel1": angle_detector.angular_vel1, "AngularVel2": angle_detector.angular_vel2})
+                {"Time": angle_detector.timestamp, "Angle1": angle_detector.angle_1, "Angle2": angle_detector.angle_2,
+                 "AngularVel1": angle_detector.angular_vel_1, "AngularVel2": angle_detector.angular_vel_2})
             self.df = pd.concat([self.df, new_row.to_frame().T], ignore_index=True)
         else:
             raise RuntimeError("No data found to be saved. "
@@ -150,20 +161,26 @@ class FrameExtractor:
         Extracts frames from the angle detector's visualization.
     """
     def __init__(self, frame_filename='frame', folder="folder", rate=10, count=10):
+        # load parameters
         self.filename = frame_filename
         self.folder = folder
         self.rate = rate
         self.frames = count
+
         self.rate_count = 0
         self.frame_count = 1
 
+        # create timestamp
         self.timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
+        # create file path for saving frames
         if not os.path.exists(f"../ExtractedFrames/{self.timestamp}_{self.folder}"):
             os.makedirs(f"../ExtractedFrames/{self.timestamp}_{self.folder}")
 
     def extract_frames(self, angle_detector):
+        # make sure that angle detection is active and frames are captured
         if angle_detector.visu is not None:
+            # safe specified number of frames with specified rate
             self.rate_count += 1
             if (self.rate_count >= self.rate) & (self.frame_count <= self.frames):
                 cv.imwrite(f"../ExtractedFrames/{self.timestamp}_"

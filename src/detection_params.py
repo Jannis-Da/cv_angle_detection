@@ -2,8 +2,13 @@ import os
 import numpy as np
 import src.calibration_params as calibration_params
 
-warped_frame_side = calibration_params.warped_frame_side
+# Parameter file used for storing/loading the parameters for the angle detection
 
+# Side length of the frame after warping (loaded from the calibration parameters for consistency)
+warped_frame_side = calibration_params.warped_frame_side # [pixel]
+
+# Reference axis calculated with alignment calibration.
+# If no file can be found a default value is used (vertical reference axis) [numpy array]
 if os.path.exists("../CalibrationData/ReferenceAxis.npy"):
     reference_axis = np.load('../CalibrationData/ReferenceAxis.npy')
 else:
@@ -11,9 +16,13 @@ else:
     print("WARNING: No 'ReferenceAxis.npy'-file found. Use 'get_reference_axis.py'-script for calibration. "
           "Continue with default values.")
 
-pos_A = reference_axis[0]
-vec_ref_1 = reference_axis[1]
+# reference axis array stores position of fixed first pivot and reference vector with direction of axis
+pos_A = reference_axis[0]  # [x,y in pixel]
+vec_ref_1 = reference_axis[1]  # [x,y in pixel]
 
+
+# Warp matrix calculated during calibration process.
+# If no file can be found a default matrix is used. [numpy array]
 if os.path.exists("../CalibrationData/WarpMatrix.npy"):
     warp_matrix = np.load('../CalibrationData/WarpMatrix.npy')
 else:
@@ -23,7 +32,8 @@ else:
     print("WARNING: No 'WarpMatrix.npy'-file found. Use 'get_warp_matrix.py'-script to compute warp matrix. "
           "Continue with default matrix.")
 
-# Threshold of searched colour red in HSV space
+# Range for red colour mask found during calibration process.
+# If no file can be found default values are used.
 if os.path.exists("../CalibrationData/HsvMinMaxRed.npy"):
     red_min_max = np.load('../CalibrationData/HsvMinMaxRed.npy')
     red_min = red_min_max[0, :]
@@ -34,7 +44,8 @@ else:
     print("WARNING: No 'HsvMinMaxRed.npy'-file found. Use 'get_hsv_masks.py'-script to collect colour values. "
           "Continue with default values.")
 
-# Threshold of searched colour green in HSV space
+# Range for green colour mask found during calibration process.
+# If no file can be found default values are used.
 if os.path.exists("../CalibrationData/HsvMinMaxGreen.npy"):
     green_min_max = np.load('../CalibrationData/HsvMinMaxGreen.npy')
     green_min = green_min_max[0, :]
@@ -45,9 +56,14 @@ else:
     print("WARNING: No 'HsvMinMaxGreen.npy'-file found. Use 'get_hsv_masks.py'-script to collect colour values. "
           "Continue with default values.")
 
-# Filter size of contours
+# Range for the filtering of the found contours by area size.
+# Calculated with dependency to size of warped frame. [pixel^2]
 area_min = 0.00145 * pow(warped_frame_side, 2)
 area_max = 0.00185 * pow(warped_frame_side, 2)
 
-
+# Length of the axes used for visualization [pixel]
 visu_axis_length = 100
+
+# Frame rate for visu recordings. Has to be adjusted according to actual code execution time for the video to have the
+# correct playback speed. [fps]
+recorder_frame_rate = 30
