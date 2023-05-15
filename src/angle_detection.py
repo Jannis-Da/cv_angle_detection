@@ -525,13 +525,19 @@ class AngleBuffer:
         float
             The calculated velocity as a float value in radians per seconds.
         """
+
+        # check if OT was passed between the two measured values
         passed_ot_from_right = self.angles[0] > 0 > self.angles[1] and self.current_vel > 0
         passed_ot_from_left = self.angles[0] < 0 < self.angles[1] and self.current_vel < 0
 
-        if passed_ot_from_right or passed_ot_from_left:
+        if passed_ot_from_right:
             self.current_vel = (self.angles[1] - self.angles[0] + 2 * math.pi) / \
                                (self.timestamps[1] - self.timestamps[0])
             return self.current_vel
 
+        if passed_ot_from_left:
+            self.current_vel = (self.angles[1] - self.angles[0] - 2 * math.pi) / \
+                               (self.timestamps[1] - self.timestamps[0])
+            return self.current_vel
         self.current_vel = (self.angles[1] - self.angles[0]) / (self.timestamps[1] - self.timestamps[0])
         return self.current_vel
