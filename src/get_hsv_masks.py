@@ -5,69 +5,7 @@ import calibration_params as cal_params
 import os.path
 from camera_controller import IDSCameraController
 
-"""
-    Class for detecting the angles and angular velocities of a double pendulum system.
 
-    Parameters
-    ----------
-    camera : Camera
-        The camera object used for capturing the video stream.
-    definition : int, optional
-        An integer value that determines the reference vector for the second pendulum arm.
-        0 for absolute, 1 for relative measurement.
-
-    Attributes
-    ----------
-    camera: Camera
-        The camera object used for capturing the video stream.
-    definition : int
-        An integer value that determines the reference vector for the second pendulum arm.
-    contours_red : numpy.ndarray
-        The contours of the red objects in the most recent frame.
-    contours_green : numpy.ndarray
-        The contours of the green objects in the most recent frame.
-    pos_A : numpy.ndarray
-        The position of the fixed pivot point of the double pendulum.
-    pos_B : numpy.ndarray
-        The position of the second pivot point.
-    pos_C : numpy.ndarray
-        The position of the end of the second pendulum arm.
-    vec_ref_1 : numpy.ndarray
-        The reference vector used for the first pendulum arm.
-    vec_ref_2 : numpy.ndarray
-        The reference vector used for the second pendulum arm.
-    angle_1 : float
-        The angle of the first pendulum arm. [rad]
-    angle_2 : float
-        The angle of the second pendulum arm. [rad]
-    angular_vel_1 : float
-        The angular velocity of the first pendulum arm. [rad/s]
-    angular_vel_2 : float
-        The angular velocity of the second pendulum arm. [rad/s]
-    angle_buffer_1 : AngleBuffer
-        The buffer used for storing the previous angle values of the first pendulum arm.
-    angle_buffer_2 : AngleBuffer
-        The buffer used for storing the previous angle values of the second pendulum arm.
-    start_time : float
-        The timestamp of when the AngleDetector object was created.
-    timestamp : float
-        The timestamp of the most recent angle calculation.
-    visu : numpy.ndarray
-        The most recent warped frame.
-    visu_used : Bool
-        A boolean indicator to show if visu function is used.
-
-    Methods
-    -------
-    get_contours()
-        Filters the captured frame for red and green colour and extracts the contours separately.
-    get_angle()
-        Calculates the angles of the double pendulum using the extracted contours.
-    get_angular_vel()
-        Calculates the angular velocity with the values in the two angle buffers.
-    visualize(vis_text=True, vis_contours=True, vis_vectors=True)
-        Visualizes the live results of angle detection.
-    """
 class HSVCollector:
     """
     A class for collecting HSV values for image segmentation.
