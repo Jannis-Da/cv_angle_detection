@@ -1,3 +1,4 @@
+import importlib
 import cv2 as cv
 import numpy as np
 import math
@@ -220,6 +221,8 @@ class AngleDetector:
         Visualizes the live results of angle detection.
     """
     def __init__(self, camera, definition=0):
+        importlib.reload(detection_params)  # reload parameter file in case of changes due to calibration
+
         self.camera = camera
         self.definition = definition
         self.contours_red = None
