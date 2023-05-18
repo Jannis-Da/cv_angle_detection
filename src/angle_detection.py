@@ -326,7 +326,7 @@ class AngleDetector:
             self.angle_2 = float('NaN')
 
         # Fill angle buffer for calculation of angular velocities
-        self.timestamp = time.time()-self.start_time
+        self.timestamp = float(round(time.time()-self.start_time, 4))
         self.angle_buffer_1.shift_buffer(self.angle_1, self.timestamp)
         self.angle_buffer_2.shift_buffer(self.angle_2, self.timestamp)
 
@@ -351,7 +351,7 @@ class AngleDetector:
             raise RuntimeError("No values for velocity calculation available. "
                                "Use 'get_angular_vel()' only in combination with 'get_angle()'-function.")
 
-    def visualize(self, vis_text=True, vis_contours=True, vis_vectors=True):
+    def visualize(self, vis_text=True, vis_contours=True, vis_vectors=True, vis_timestamp=False):
         """
         Visualizes the live results of angle detection.
 
@@ -363,6 +363,8 @@ class AngleDetector:
             Boolean value to decide if contours should be visualized.
         vis_vectors : bool
             Boolean value to decide if vectors should be visualized.
+        vis_timestamp : bool
+            Boolean value to decide if timestamp should be visualized.
         """
         # Ensure that frame for visualization are available
         if self.visu is not None:
@@ -468,12 +470,21 @@ class AngleDetector:
                 if not math.isnan(self.pos_C[0]):
                     cv.circle(self.visu, self.pos_C, 2, (255, 0, 0), thickness=3)
 
+            if vis_timestamp:
+                cv.rectangle(self.visu, (detection_params.warped_frame_side-130, 0),
+                             (detection_params.warped_frame_side, 20), (255, 255, 255), -1)
+                cv.putText(self.visu, f"t = {self.timestamp}s", (detection_params.warped_frame_side-128, 16),
+                           cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv.LINE_AA)
+
             # show frame in pop-up window
             cv.namedWindow('Angle Detection', cv.WINDOW_AUTOSIZE)
             cv.imshow('Angle Detection', self.visu)
+
+
         else:
             raise RuntimeError("Nothing to visualize. "
                                "Use 'visualize()'-function only in combination with 'get_angle()'-function.")
+
 
 
 class AngleBuffer:
