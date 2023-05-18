@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 
 def main():
-    pkl_file_path = 'G:/Meine Ablage/Google Drive/Studium/Semester 6/Seminararbeit/Evaluation/LongEva/2023-05-18_17-23-12_EvalLong.pkl'
+    pkl_file_path = '../MeasurementData/LongEva/2023-05-18_17-23-12_EvalLong.pkl'
 
     with open(pkl_file_path, 'rb') as file:
         pkl_data = pkl.load(file)
@@ -22,7 +22,7 @@ def main():
     print(f'Not measured Angles for Arm 2: {round(missing_angle2_prct, 3)}%')
 
     misdetection_df = log_df.drop(log_df[(log_df['Angle1'].notna()) & (log_df['Angle2'].notna())].index)
-    misdetection_df.to_csv(f"G:/Meine Ablage/Google Drive/Studium/Semester 6/Seminararbeit/Evaluation/LongEva/LabelMisdetection.csv", sep=';', index=False, decimal='.')
+    misdetection_df.to_csv('../MeasurementData/LongEva/Misdetection.csv', sep=';', index=False, decimal='.')
 
     execution_time_df = log_df
     execution_time_df['ExecutionTime'] = execution_time_df['Time'].diff()
@@ -42,8 +42,8 @@ def main():
     plt.xlabel('Measurement Time [s]')
     plt.ylabel('Execution Time[s]')
     plt.title('Execution Time during Measurement ')
-    plt.savefig('ExecutionTimeEvalLong.pdf', format='pdf')
-    #plt.show()
+    plt.savefig('../MeasurementData/LongEva/Plots/ExecutionTimeEvalLong.pdf', format='pdf')
+    plt.show()
 
 
 if __name__ == '__main__':

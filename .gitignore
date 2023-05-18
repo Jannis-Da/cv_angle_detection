@@ -123,3 +123,6 @@ fabric.properties
 
 #Calibration data
 /CalibrationData
+
+#Jupyter Notebook checkpoints
+.ipynb_checkpoints

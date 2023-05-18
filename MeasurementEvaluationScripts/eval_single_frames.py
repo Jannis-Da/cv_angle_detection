@@ -4,8 +4,7 @@ import numpy as np
 
 
 def main():
-    pkl_file_path = 'G:/Meine Ablage/Google Drive/Studium/Semester 6/Seminararbeit/Evaluation/EinzelbilderEva/' \
-                    '2023-05-17_20-05-26_EvalFrames.pkl'
+    pkl_file_path = '../MeasurementData/EinzelbilderEva/2023-05-17_20-05-26_EvalFrames.pkl'
 
     with open(pkl_file_path, 'rb') as file:
         pkl_data = pkl.load(file)
@@ -33,11 +32,8 @@ def main():
     print(f"STD_DEV Angle1 = {round(std_dev[0], 4)} rad")
     print(f"STD_DEV Angle2 = {round(std_dev[1], 4)} rad")
 
-    diff_df.to_csv(
-        f"G:/Meine Ablage/Google Drive/Studium/Semester 6/Seminararbeit/Evaluation/EinzelbilderEva/Output.csv", sep=';',
-        index=False, decimal='.')
-    diff_df.to_pickle(
-        f"G:/Meine Ablage/Google Drive/Studium/Semester 6/Seminararbeit/Evaluation/EinzelbilderEva/Output.pkl")
+    diff_df.to_csv('../MeasurementData/EinzelbilderEva/EvalOutput.csv', sep=';', index=False, decimal='.')
+    diff_df.to_pickle('../MeasurementData/EinzelbilderEva/EvalOutput.pkl')
 
 
 def norm_vector(vector):
@@ -131,7 +127,7 @@ def calc_std_dev(df):
 
 
 def read_gt_csv():
-    gt_data_dir = 'G:/Meine Ablage/Google Drive/Studium/Semester 6/Seminararbeit/Evaluation/EinzelbilderEva/GroundTruthV1.csv'
+    gt_data_dir = '../MeasurementData/EinzelbilderEva/GroundTruthV1.csv'
     return pd.read_csv(gt_data_dir, delimiter=';', decimal='.', dtype=float, na_values='')
 
 

@@ -11,7 +11,7 @@ data = {'Time': [],
 
 df = pd.DataFrame(data)
 
-frames_dir = 'G:/Meine Ablage/Google Drive/Studium/Semester 6/Seminararbeit/Evaluation/EinzelbilderEva/2023-05-17_20-05-26_EvalFrames'
+frames_dir = '../MeasurementData/EinzelbilderEva/2023-05-17_20-05-26_EvalFrames'
 file_names = os.listdir(frames_dir)
 
 ref_row = pd.Series(
@@ -26,5 +26,5 @@ for file_name in file_names:
     df = pd.concat([df, new_row.to_frame().T], ignore_index=True)
 
 df = df.sort_values('Time')
-df.to_csv(f"G:/Meine Ablage/Google Drive/Studium/Semester 6/Seminararbeit/Evaluation/EinzelbilderEva/GroundTruth.csv", sep=';', index=False, decimal='.')
+df.to_csv('../MeasurementData/EinzelbilderEva/GroundTruth.csv', sep=';', index=False, decimal='.')
 
