@@ -1,6 +1,6 @@
 import cv2 as cv
-import src.calibration_params
-from src.camera_controller import IDSCameraController
+import calibration_params
+from camera_controller import IDSCameraController
 
 # --------------------------------------------------IMPORTANT NOTE-----------------------------------------------------
 # This script is intended only for debugging purposes. It can be used to visualize the aruco markers that can be found
@@ -17,8 +17,8 @@ def main():
         frame = camera.capture_image()
 
         # detect the aruco markers
-        corners, ids, _ = cv.aruco.detectMarkers(frame, src.calibration_params.aruco_dict,
-                                                 parameters=src.calibration_params.aruco_params)
+        corners, ids, _ = cv.aruco.detectMarkers(frame, calibration_params.aruco_dict,
+                                                 parameters = calibration_params.aruco_params)
 
         # draw marker visu in frame
         cv.aruco.drawDetectedMarkers(frame, corners)

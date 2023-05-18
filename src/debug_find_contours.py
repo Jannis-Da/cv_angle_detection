@@ -1,6 +1,6 @@
 import cv2 as cv
-import src.detection_params as params
-from src.camera_controller import IDSCameraController
+import detection_params as params
+from camera_controller import IDSCameraController
 
 # --------------------------------------------------IMPORTANT NOTE-----------------------------------------------------
 # This script is intended only for debugging purposes. It can be used to visualize the hsv colour masks
