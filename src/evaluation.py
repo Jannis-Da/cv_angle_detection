@@ -118,7 +118,7 @@ class DataRecorder:
 
     def save_csv(self):
         if len(self.df.Time.value_counts()) > 0:
-            self.df.to_csv(f"../DataRecords/{self.timestamp}_{self.filename}.csv", index=False, decimal=',')
+            self.df.to_csv(f"../DataRecords/{self.timestamp}_{self.filename}.csv", sep=';', index=False, decimal='.')
         else:
             print("WARNING: No values found to save to .csv-file. Use 'write_datarow'-function to collect data.")
 

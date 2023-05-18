@@ -1,6 +1,6 @@
 import os
 import numpy as np
-import src.calibration_params as calibration_params
+import calibration_params as calibration_params
 
 # Parameter file used for storing/loading the parameters for the angle detection
 
@@ -66,4 +66,4 @@ visu_axis_length = 100
 
 # Frame rate for visu recordings. Has to be adjusted according to actual code execution time for the video to have the
 # correct playback speed. [fps]
-recorder_frame_rate = 30
+recorder_frame_rate = 20
