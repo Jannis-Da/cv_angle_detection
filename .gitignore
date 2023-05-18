@@ -126,3 +126,6 @@ fabric.properties
 
 #Jupyter Notebook checkpoints
 .ipynb_checkpoints
+
+#Video Files
+*.avi
