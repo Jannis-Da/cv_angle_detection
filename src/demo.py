@@ -1,8 +1,8 @@
 from camera_controller import IDSCameraController
 from angle_detection import AngleDetector
-from evaluation import VisuRecorder
-from evaluation import DataRecorder
-from evaluation import FrameExtractor
+from recording import VisuRecorder
+from recording import DataRecorder
+from recording import FrameExtractor
 import time
 import cv2 as cv
 
@@ -24,7 +24,7 @@ measurement = AngleDetector(camera, definition=0)
 
 # Initialize evaluation objects
 # VisuRecorder to record video stream, rec_filename = set video filename
-visu_rec = VisuRecorder(rec_filename='Demo')
+visu_rec = VisuRecorder(rec_filename='KurzMit')
 
 # DataRecorder to record measurement data, log_filename = set log filename
 data_rec = DataRecorder(log_filename='Demo')
@@ -46,7 +46,7 @@ while True:
     # Visualize measurement live, vis_text = enable text field with current data,
     # vis_contours = enable visualization of used contours, vis_vectors = enable visualization of angle definition
     # Note: Use only in combination with get_angle() and if velocities needed with get_angular_vel()
-    measurement.visualize(vis_text=True, vis_contours=True, vis_vectors=True, vis_timestamp=True)
+    measurement.visualize(vis_text=False, vis_contours=False, vis_vectors=False, vis_timestamp=True)
 
     # Record visualization of measurement, passing parameter: AngleDetector-Object
     # Note: Use only in combination with visualize() function
@@ -61,7 +61,7 @@ while True:
     frame_extr.extract_frames(measurement)
 
     # Print execution time per cycle if needed
-    #print(time.time() - start_time)
+    print(time.time() - start_time)
 
     # Possibility to quit measurement by hitting 'q'. Only usable if visualize() function is used.
     if cv.waitKey(1) & 0xFF == ord('q'):
