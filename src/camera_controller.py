@@ -18,9 +18,9 @@ class IDSCameraController:
         # Starts the driver and establishes the connection to the camera
         ueye.is_InitCamera(self.h_cam, None)
 
-        pParam = ueye.wchar_p()
-        pParam.value = param_file
-        ueye.is_ParameterSet(self.h_cam, ueye.IS_PARAMETERSET_CMD_LOAD_FILE, pParam, 0)
+        p_param = ueye.wchar_p()
+        p_param.value = param_file
+        ueye.is_ParameterSet(self.h_cam, ueye.IS_PARAMETERSET_CMD_LOAD_FILE, p_param, 0)
 
         # Set display mode to DIB
         ueye.is_SetDisplayMode(self.h_cam, ueye.IS_SET_DM_DIB)
