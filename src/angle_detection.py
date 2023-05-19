@@ -304,6 +304,7 @@ class AngleDetector:
 
         # Calculate angle of second arm
         if found_B & found_C:
+            vec_ab = self.pos_B - self.pos_A
             vec_bc = self.pos_C - self.pos_B
             # Check for chosen angle definition
             if self.definition == 0:
@@ -479,12 +480,9 @@ class AngleDetector:
             # show frame in pop-up window
             cv.namedWindow('Angle Detection', cv.WINDOW_AUTOSIZE)
             cv.imshow('Angle Detection', self.visu)
-
-
         else:
             raise RuntimeError("Nothing to visualize. "
                                "Use 'visualize()'-function only in combination with 'get_angle()'-function.")
-
 
 
 class AngleBuffer:
