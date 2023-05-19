@@ -18,7 +18,7 @@ def main():
 
         # detect the aruco markers
         corners, ids, _ = cv.aruco.detectMarkers(frame, calibration_params.aruco_dict,
-                                                 parameters = calibration_params.aruco_params)
+                                                 parameters=calibration_params.aruco_params)
 
         # draw marker visu in frame
         cv.aruco.drawDetectedMarkers(frame, corners)
@@ -38,4 +38,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
