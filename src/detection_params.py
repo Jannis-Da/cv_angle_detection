@@ -5,7 +5,7 @@ import calibration_params as calibration_params
 # Parameter file used for storing/loading the parameters for the angle detection
 
 # Side length of the frame after warping (loaded from the calibration parameters for consistency)
-warped_frame_side = calibration_params.warped_frame_side # [pixel]
+warped_frame_side = calibration_params.warped_frame_side  # [pixel]
 
 # Reference axis calculated with alignment calibration.
 # If no file can be found a default value is used (vertical reference axis) [numpy array]
