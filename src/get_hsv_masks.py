@@ -179,7 +179,7 @@ def main():
         if key == ord('q'):
             cancel = True
             break
-        elif key == ord('n') or hsv_values_green.hsv_values_idx >= 10: # collect maximum 10 values
+        elif key == ord('n') or hsv_values_green.hsv_values_idx >= 10:  # collect maximum 10 values
             break
 
     # save hsv values range to npy file
