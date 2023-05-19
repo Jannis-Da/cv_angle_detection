@@ -123,3 +123,5 @@ fabric.properties
 
 #Calibration data
 /CalibrationData
+
+/MeasurementData
