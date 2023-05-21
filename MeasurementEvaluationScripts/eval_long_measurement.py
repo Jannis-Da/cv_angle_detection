@@ -18,6 +18,7 @@ def main():
     missing_angle2_count = log_df['Angle2'].isna().sum()
     missing_angle2_prct = missing_angle2_count/len(log_df) * 100
 
+    print(f'Analysed Frames: {len(log_df)}')
     print(f'Not measured Angles for Arm 1: {round(missing_angle1_prct, 3)}%')
     print(f'Not measured Angles for Arm 2: {round(missing_angle2_prct, 3)}%')
 
@@ -43,7 +44,7 @@ def main():
     plt.ylabel('Execution Time[s]')
     plt.title('Execution Time during Measurement ')
     plt.savefig('../MeasurementData/LongEva/Plots/ExecutionTimeEvalLong.pdf', format='pdf')
-    plt.show()
+    #plt.show()
 
 
 if __name__ == '__main__':
