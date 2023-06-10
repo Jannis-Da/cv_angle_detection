@@ -12,7 +12,8 @@ warped_frame_side = calibration_params.warped_frame_side  # [pixel]
 if os.path.exists("../CalibrationData/ReferenceAxis.npy"):
     reference_axis = np.load('../CalibrationData/ReferenceAxis.npy')
 else:
-    reference_axis = np.array(([int(warped_frame_side / 2), int(warped_frame_side / 2)], [0, warped_frame_side / 2]))
+    reference_axis = np.array(([int(warped_frame_side / 2), int(warped_frame_side / 2)], [0, warped_frame_side / 2]),
+                              dtype=int)
     print("WARNING: No 'ReferenceAxis.npy'-file found. Use 'get_reference_axis.py'-script for calibration. "
           "Continue with default values.")
 
